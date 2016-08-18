@@ -1,0 +1,149 @@
+
+import java.util.*;
+import java.lang.*;
+import java.io.*;
+
+public class Test
+{
+	
+	public static enum ListOrder { RANDOM, ASCENDING, DESCENDING };
+	
+	public static final String ALG_QUICK_SORT_FIRST = "Quick Sort (Pivot = first)";
+	public static final String ALG_QUICK_SORT_MEDIAN = "Quick Sort (Pivot = median of random 3)";
+	public static final String ALG_MERGE_SORT = "Merge Sort";
+	public static final String ALG_MERGE_SORT_THRESHOLD = "Merge Sort w/Threshold";
+	public static final String ALG_INSERTION_SORT = "Insertion Sort";
+	public static final String ALG_SELECTION_SORT = "Selection Sort";
+	public static final String ALG_EXCHANGE_SORT = "Exchange Sort";
+	public static final String[] Algorithms = { ALG_QUICK_SORT_FIRST,
+		ALG_QUICK_SORT_MEDIAN, ALG_MERGE_SORT, ALG_MERGE_SORT_THRESHOLD,
+		ALG_INSERTION_SORT, ALG_SELECTION_SORT, ALG_EXCHANGE_SORT };
+	
+	public static void main (String[] args) throws java.lang.Exception
+	{
+		int minPower = 10;
+		int maxPower = 20;
+		
+		testSort(10, 100, ListOrder.RANDOM, ALG_MERGE_SORT);
+		
+		for(ListOrder order : ListOrder.values()) {
+			switch(order) {
+			case RANDOM: System.out.println("\nLists in Random order."); break;
+			case ASCENDING: System.out.println("\nLists in Sorted (Ascending) order."); break;
+			case DESCENDING: System.out.println("\nLists in Sorted (Descending) order."); break;
+			}
+			for(String alg : Algorithms) {
+				System.out.println("\n"+alg);
+				System.out.println("List Size, Avg Comparisons, Avg Swaps, Avg Time (ms), Trials");
+				for(int i=minPower; i<=maxPower; i+=1)
+					testSort(i, 100, order, alg);
+			}
+		}
+	}
+	
+	public static void testSort(int listSizePower, int iterations, 
+			ListOrder generateOrder, String algorithm)
+	{
+		long avgComparisons = 0;
+		long avgSwaps = 0;
+		double avgTime = 0;
+		
+		int listSize = Double.valueOf(Math.pow(2, listSizePower)).intValue();
+		
+		if(algorithm.equals(ALG_EXCHANGE_SORT) || algorithm.equals(ALG_INSERTION_SORT) ||
+				algorithm.equals(ALG_SELECTION_SORT)) {
+			if(listSizePower >= 18)
+				return;
+			iterations = (listSizePower < 15 ? (-1*listSizePower*listSizePower)+200 : 1);
+		}
+		
+		for(int i=0; i<iterations; i++) {
+			
+			int[] list;
+			switch(generateOrder) {
+			case ASCENDING: list = generateOrderedAscList(listSize); break;
+			case DESCENDING: list = generateOrderedDescList(listSize); break;
+			default: list = generateRandomList(listSize); break;
+			}
+			
+			Sort.prepMeasurements();
+			
+			int[] sorted;
+			switch(algorithm) {
+			case ALG_QUICK_SORT_FIRST: sorted = new Sort.QuickSort(list, false).sort(); break;
+			case ALG_QUICK_SORT_MEDIAN: sorted = new Sort.QuickSort(list, true).sort(); break;
+			case ALG_MERGE_SORT: sorted = Sort.mergeSort(list, 1); break;
+			case ALG_MERGE_SORT_THRESHOLD: sorted = Sort.mergeSort(list, 8); break;
+			case ALG_INSERTION_SORT: sorted = Sort.insertionSort(list); break;
+			case ALG_SELECTION_SORT: sorted = Sort.selectionSort(list); break;
+			case ALG_EXCHANGE_SORT: sorted = Sort.exchangeSort(list); break;
+			default: sorted = Sort.exchangeSort(list); break;
+			}
+			
+			Sort.gatherMeasurements();
+			
+			avgComparisons += Sort.comparisons;
+			avgSwaps += Sort.swaps;
+			avgTime += Sort.elapsedTime;
+			
+			// Check if the list is truly sorted.
+			if(!Sort.isSortedAsc(sorted)) {
+				System.out.println(algorithm+" failed! Terminating.");
+				break;
+			}
+			
+		}
+		
+		avgComparisons /= iterations;
+		avgSwaps /= iterations;
+		avgTime /= iterations;
+		
+		System.out.println(listSize+", "+avgComparisons+
+			", "+avgSwaps+", "+avgTime+", "+iterations+"");
+	}
+	
+	public static void printList(int[] list)
+	{
+		System.out.print("[");
+		for(int i=0; i<list.length; i++) {
+			System.out.print(list[i]+(i == list.length-1 ? "" : ", "));
+		}
+		System.out.println("]");
+	}
+	
+	public static int[] generateRandomList(int size)
+	{
+		if(size < 1)
+			return null;
+		int[] list = new int[size];
+		Random rand = new Random();
+		int  r = rand.nextInt(500000) + 1; // between 1 and 500,000
+		for(int i=0; i<size; i++) {
+			list[i] = r;
+			r = rand.nextInt(500000) + 1;
+		}
+		return list;
+	}
+	
+	public static int[] generateOrderedAscList(int size)
+	{
+		if(size < 1)
+			return null;
+		int[] list = new int[size];
+		for(int i=0; i<size; i++) {
+			list[i] = i;
+		}
+		return list;
+	}
+	
+	public static int[] generateOrderedDescList(int size)
+	{
+		if(size < 1)
+			return null;
+		int[] list = new int[size];
+		for(int i=0; i<size; i++) {
+			list[i] = size-i;
+		}
+		return list;
+	}
+}

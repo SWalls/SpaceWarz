@@ -1,0 +1,114 @@
+import java.util.Random;
+
+public class QuickSort {
+
+	private int[] list;
+	private boolean pickMedian = true;
+	private Random rand;
+	
+	public QuickSort(int[] list, boolean pickMedian) {
+		this.list = list;
+		this.pickMedian = pickMedian;
+		rand = new Random();
+	}
+	
+	public int[] sort()
+	{
+		sort(0, list.length);
+		return list;
+	}
+	
+	private void sort(int low, int high)
+	{
+		if(high > low && high - low > 1) {
+			int pivotIdx = partition(low, high);
+			sort(low, pivotIdx);
+			sort(pivotIdx+1, high);
+		}
+	}
+	
+	private int partition(int low, int high)
+	{
+		int pivotIdx = (pickMedian ? pickMedianIdx(low, high) : low);
+		int pivotItem = list[pivotIdx];
+		int j = pivotIdx;
+		for(int i=pivotIdx-1; i>=low; i--) {
+			Sort.comparisons++;
+			if(list[i] > pivotItem) {
+				j--;
+				if(j != i) {
+					// swap
+					int temp = list[j];
+					list[j] = list[i];
+					list[i] = temp;
+					Sort.swaps++;
+				}
+			}
+		}
+		list[pivotIdx] = list[j];
+		list[j] = pivotItem;
+		pivotIdx = j;
+		for(int i=pivotIdx+1; i<high; i++) {
+			Sort.comparisons++;
+			if(list[i] < pivotItem) {
+				j++;
+				if(j != i) {
+					// swap
+					int temp = list[j];
+					list[j] = list[i];
+					list[i] = temp;
+					Sort.swaps++;
+				}
+			}
+		}
+		list[pivotIdx] = list[j];
+		list[j] = pivotItem;
+		return j;
+	}
+	
+	private int pickMedianIdx(int low, int high)
+	{
+		if(high-low < 9) {
+			return (low+high)/2;
+		}
+		int size = high-low;
+		int[] picked = {-1,-1,-1};
+		int r1 = rand.nextInt(( (size)/3 - 0 ) + 1) + 0; // between low and (low+high)/3
+		int r2 = rand.nextInt(( ((size)*2)/3 - (size)/3 ) + 1) + (size)/3; // between (low+high)/3 and (low+high)*2/3
+		int r3 = rand.nextInt(( size-1 - ((size*2)/3) ) + 1) + ((size*2)/3); // between (low+high)*2/3 and high-1
+		picked[0] = r1;
+		picked[1] = r2;
+		picked[2] = r3;
+		System.out.println("LowI: "+picked[0]+", RandI: "+picked[1]+", HighI: "+picked[2]);
+		System.out.println("LowE: "+list[picked[0]]+", RandE: "+list[picked[1]]+", HighE: "+list[picked[2]]);
+		// find median
+		int median = picked[0];
+		if(list[picked[0]] < list[picked[1]]) {
+			if(list[picked[0]] >= list[picked[2]]) {
+				median = picked[0];
+				Sort.comparisons+=2;
+			} else if(list[picked[1]] < list[picked[2]]) {
+				median = picked[1];
+				Sort.comparisons+=3;
+			} else {
+				median = picked[2];
+				Sort.comparisons+=3;
+			}
+		} else {
+			if(list[picked[0]] < list[picked[2]]) {
+				median = picked[0];
+				Sort.comparisons+=2;
+			} else if(list[picked[1]] >= list[picked[2]]) {
+				median = picked[1];
+				Sort.comparisons+=3;
+			} else {
+				median = picked[2];
+				Sort.comparisons+=3;
+			}
+		}
+		// System.out.println("Selected median "+list[median]+" from ("+
+		//		list[picked[0]]+", "+list[picked[1]]+", "+list[picked[2]]+")");
+		return median;
+	}
+	
+}

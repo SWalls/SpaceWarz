@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: SW_FinalProject
+Bundle-SymbolicName: SW_FinalProject
+Bundle-Version: 1.0.0.qualifier
+Export-Package: .,
+ media

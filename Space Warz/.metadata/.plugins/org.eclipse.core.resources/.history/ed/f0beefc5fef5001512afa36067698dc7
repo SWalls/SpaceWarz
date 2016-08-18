@@ -1,0 +1,284 @@
+import java.util.Random;
+
+
+public class Sort {
+	
+	// measurements
+	static long comparisons = 0;
+	static long swaps = 0;
+	static long memory = 0;
+	static long startTime = 0;
+	static long elapsedTime = 0;
+	
+	public static int[] exchangeSort(int[] list)
+	{
+		if(list == null)
+			return null;
+		for(int i=0; i<list.length; i++) {
+			for(int j=i+1; j<list.length; j++) {
+				comparisons++;
+				if(list[j] < list[i]) {
+					// Swap the items
+					int temp = list[i];
+					list[i] = list[j];
+					list[j] = temp;
+					swaps++;
+				}
+			}
+		}
+		return list;
+	}
+	
+	public static int[] selectionSort(int[] list)
+	{
+		if(list == null)
+			return null;
+		for(int i=0; i<list.length; i++) {
+			// Keep track of minimum index so far.
+			// Assume it's the current element.
+			int iMin = i;
+			// Look for a smaller element than minimum.
+			for(int j=i+1; j<list.length; j++) {
+				comparisons++;
+				if(list[j] < list[iMin])
+					iMin = j;
+			}
+			// If smaller element was found, swap them.
+			if(iMin != i) {
+				int temp = list[i];
+				list[i] = list[iMin];
+				list[iMin] = temp;
+				swaps++;
+			}
+		}
+		return list;
+	}
+	
+	public static int[] insertionSort(int[] list, int low, int high)
+	{
+		for(int i=low+1; i<high; i++) {
+			int x = list[i];
+			int j = i-1;
+			while(j>=low && list[j] > x) {
+				comparisons++;
+				swaps++;
+				int temp = list[j];
+				list[j] = list[j+1];
+				list[j+1] = temp;
+				j--;
+			}
+		}
+		return list;
+	}
+	
+	public static class MergeSort {
+		
+		private int[] list;
+		private int threshold;
+		
+		public MergeSort(int[] list, int threshold) {
+			this.list = list;
+			this.threshold = threshold;
+		}
+		
+		public int[] sort()
+		{
+			sort(0, list.length);
+			return list;
+		}
+		
+		public void sort(int left, int right)
+		{
+			int size = right-left;
+			// Base case n=1
+			if(size <= 1)
+				return;
+			// Switch to Selection Sort if n<=threshold
+			if(size <= threshold)
+				insertionSort(list, left, right);
+			// Do merge sort...
+			// Split list into halves.
+			int leftChildSize = size/2;
+			// Sort the halves using merge sort.
+			sort(left, left+leftChildSize);
+			sort(left+leftChildSize, right);
+			// Finally, merge the sorted halves.
+			merge(left, leftChildSize, right);
+		}
+		
+		public int[] merge(int[] leftSorted, int[] rightSorted)
+		{
+			int[] merged = new int[leftSorted.length+rightSorted.length];
+			int i=0, j=0, k=0;
+			while(i<leftSorted.length && j<rightSorted.length) {
+				comparisons++;
+				if(leftSorted[i] < rightSorted[j]) {
+					merged[k] = leftSorted[i];
+					i++;
+				} else {
+					merged[k] = rightSorted[j];
+					j++;
+				}
+				k++;
+			}
+			if(i>=leftSorted.length) {
+				while(j<rightSorted.length) {
+					merged[k] = rightSorted[j];
+					k++;
+					j++;
+				}
+			} else {
+				while(i<leftSorted.length) {
+					merged[k] = leftSorted[i];
+					k++;
+					i++;
+				}
+			}
+			return merged;
+		}
+		
+	}
+	
+	public static class QuickSort {
+	
+		private int[] list;
+		private boolean pickMedian = true;
+		private Random rand;
+		
+		public QuickSort(int[] list, boolean pickMedian) {
+			this.list = list;
+			this.pickMedian = pickMedian;
+			rand = new Random();
+		}
+		
+		public int[] sort()
+		{
+			sort(0, list.length);
+			return list;
+		}
+		
+		private void sort(int low, int high)
+		{
+			if(high > low && high - low > 1) {
+				int pivotIdx = partition(low, high);
+				sort(low, pivotIdx);
+				sort(pivotIdx+1, high);
+			}
+		}
+		
+		private int partition(int low, int high)
+		{
+			int pivotIdx = (pickMedian ? pickMedianIdx(low, high) : low);
+			int pivotItem = list[pivotIdx];
+			int j = pivotIdx;
+			for(int i=pivotIdx-1; i>=low; i--) {
+				Sort.comparisons++;
+				if(list[i] > pivotItem) {
+					j--;
+					if(j != i) {
+						// swap
+						int temp = list[j];
+						list[j] = list[i];
+						list[i] = temp;
+						Sort.swaps++;
+					}
+				}
+			}
+			list[pivotIdx] = list[j];
+			list[j] = pivotItem;
+			pivotIdx = j;
+			for(int i=pivotIdx+1; i<high; i++) {
+				Sort.comparisons++;
+				if(list[i] < pivotItem) {
+					j++;
+					if(j != i) {
+						// swap
+						int temp = list[j];
+						list[j] = list[i];
+						list[i] = temp;
+						Sort.swaps++;
+					}
+				}
+			}
+			list[pivotIdx] = list[j];
+			list[j] = pivotItem;
+			return j;
+		}
+		
+		private int pickMedianIdx(int low, int high)
+		{
+			if(high-low < 9) {
+				return (low+high)/2;
+			}
+			
+			int size = high-low;
+			int[] picked = {-1,-1,-1};
+			int r1 = rand.nextInt(( (size)/3 - 0 ) + 1) + 0; // between 0 and size/3
+			int r2 = rand.nextInt(( ((size*2)/3) - (size)/3 ) + 1) + (size)/3; // between size/3 and size*2/3
+			int r3 = rand.nextInt(( size-1 - ((size*2)/3) ) + 1) + ((size*2)/3); // between size*2/3 and size-1
+			picked[0] = low+r1;
+			picked[1] = low+r2;
+			picked[2] = low+r3;
+	
+			// find median between 3
+			int median = picked[0];
+			if(list[picked[0]] < list[picked[1]]) {
+				if(list[picked[0]] >= list[picked[2]]) {
+					median = picked[0];
+					Sort.comparisons+=2;
+				} else if(list[picked[1]] < list[picked[2]]) {
+					median = picked[1];
+					Sort.comparisons+=3;
+				} else {
+					median = picked[2];
+					Sort.comparisons+=3;
+				}
+			} else {
+				if(list[picked[0]] < list[picked[2]]) {
+					median = picked[0];
+					Sort.comparisons+=2;
+				} else if(list[picked[1]] >= list[picked[2]]) {
+					median = picked[1];
+					Sort.comparisons+=3;
+				} else {
+					median = picked[2];
+					Sort.comparisons+=3;
+				}
+			}
+			/*
+			System.out.println("Selected median "+list[median]+" from ("+
+					list[picked[0]]+", "+list[picked[1]]+", "+list[picked[2]]+")");
+			*/
+			return median;
+		}
+		
+	}
+	
+	public static void prepMeasurements()
+	{
+		// prepare measurements
+		comparisons = 0;
+		swaps = 0;
+		memory = 0;
+		startTime = System.currentTimeMillis();
+	}
+	
+	public static void gatherMeasurements()
+	{
+		// gather measurements
+		long stopTime = System.currentTimeMillis();
+		elapsedTime = stopTime - startTime;
+	}
+	
+	public static boolean isSortedAsc(int[] list)
+	{
+		if(list == null)
+			return false;
+		for(int i=1; i<list.length; i++) {
+			if(list[i] < list[i-1])
+				return false;
+		}
+		return true;
+	}
+	
+}
